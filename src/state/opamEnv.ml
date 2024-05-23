@@ -542,7 +542,7 @@ let compute_updates ?(force_path=false) st =
   in
   let nix_env =
     let open OpamFilename in
-    create st.switch_global.root (basename (raw "nix.env"))
+    create (OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) st.switch) (basename (raw "nix.env"))
     |> OpamFile.make
     |> OpamFile.Environment.read
     |> List.map resolve_separator_and_format
