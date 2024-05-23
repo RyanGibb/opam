@@ -1039,7 +1039,7 @@ for var in "''${vars[@]}"; do
   escaped="$(echo "''${!var}" | sed -e 's/^$/@/' -e 's/ /\\ /g')"
   echo "$var	=	$escaped	Nix" >> $out
 done
-echo "PATH	=	$PATH	Nix"
+echo "PATH	+=	$PATH	Nix" >> $out
   '';
 
   preferLocalBuild = true;
