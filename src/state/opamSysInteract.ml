@@ -1023,13 +1023,9 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) switch config sys_
     let contents =
 {|{ pkgs ? import <nixpkgs> {} }:
 with pkgs;
-let
-  packages = [ |} ^ packages ^ {| ];
-  inputs = with buildPackages; packages ++ [ pkg-config ];
-in
 stdenv.mkDerivation {
   name = "opam-nix-env";
-  nativeBuildInputs = inputs;
+  nativeBuildInputs = with buildPackages; [ |} ^ packages ^ {| ];
 
   phases = [ "buildPhase" ];
 
