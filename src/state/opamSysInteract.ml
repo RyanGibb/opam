@@ -899,8 +899,8 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     in
     compute_sets sys_installed
   | Nix ->
-      (* TODO list all available packages *)
-      packages, OpamSysPkg.Set.empty;
+      (* we say all packages are available and installed *)
+      packages, packages;
   | Openbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-mqP"]
