@@ -540,7 +540,14 @@ let compute_updates ?(force_path=false) st =
     in
     List.map resolve_separator_and_format updates
   in
-  switch_env @ pkg_env @ man_path @ [path]
+  let nix_env =
+    let open OpamFilename in
+    create st.switch_global.root (basename (raw "nix.env"))
+    |> OpamFile.make
+    |> OpamFile.Environment.read
+    |> List.map resolve_separator_and_format
+  in
+  switch_env @ pkg_env @ man_path @ [path] @ nix_env
 
 let updates_common ~set_opamroot ~set_opamswitch root switch =
   let root =
