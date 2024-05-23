@@ -1181,7 +1181,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     let answer =
       let pkgman =
         OpamConsole.colorise `yellow
-          (OpamSysInteract.package_manager_name ~env config)
+          (OpamSysInteract.package_manager_name ~env t.switch config)
       in
       OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
         "opam believes some required external dependencies are missing. opam \
@@ -1213,7 +1213,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     | `Quit -> give_up_msg (); OpamStd.Sys.exit_because `Aborted
   and print_command sys_packages =
     let commands =
-      OpamSysInteract.install_packages_commands ~env config sys_packages
+      OpamSysInteract.install_packages_commands ~env t.switch config sys_packages
       |> List.map (fun ((`AsAdmin c | `AsUser c), a) -> c::a)
     in
     OpamConsole.formatted_msg
@@ -1242,7 +1242,7 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t packages =
     | `Quit -> give_up ()
   and auto_install t sys_packages =
     try
-      OpamSysInteract.install ~env config sys_packages; (* handles dry_run *)
+      OpamSysInteract.install ~env t.switch config sys_packages; (* handles dry_run *)
       map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
     with Failure msg ->
       OpamConsole.error "%s" msg;
