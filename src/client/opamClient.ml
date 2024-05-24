@@ -1597,7 +1597,7 @@ let install_t t ?ask ?(ignore_conflicts=false) ?(depext_only=false)
         if has_missing_depexts then
           let gt = t.switch_global in
           OpamStd.Option.map_default (fun s -> s ^ ".\n\n") ""
-            (OpamSysInteract.repo_enablers ~env:gt.global_variables gt.config)
+            (OpamSysInteract.repo_enablers ~env:gt.global_variables t.switch gt.config)
         else ""
       in
       OpamConsole.errmsg "%s%s"
