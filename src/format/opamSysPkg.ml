@@ -49,6 +49,9 @@ type status =
     s_available : Set.t;
     (** Package available but not installed *)
 
+    s_required : Set.t;
+    (** Package installed but also needs to be passed to the installation *)
+
     s_not_found : Set.t;
     (** Package unavailable on this system *)
   }
@@ -57,6 +60,7 @@ type status =
 let status_empty =
   {
     s_available  = Set.empty;
+    s_required  = Set.empty;
     s_not_found  = Set.empty;
   }
 

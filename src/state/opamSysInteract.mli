@@ -14,11 +14,13 @@ open OpamStateTypes
    system and returns a pair of [sys_package] set:
      * first one is available set: package that exist on the default
        repositories, but not installed)
-     * second one, not found set: packages not found on the defined repositories
+     * second one, also required set: the list of packages which also need to be
+       passed to the installation
+     * third one, not found set: packages not found on the defined repositories
    [env] is used to determine host specification. *)
 val packages_status:
-  ?env:gt_variables -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
-  OpamSysPkg.Set.t * OpamSysPkg.Set.t
+  ?env:gt_variables -> OpamSwitch.t -> OpamFile.Config.t -> OpamSysPkg.Set.t ->
+  OpamSysPkg.Set.t * OpamSysPkg.Set.t * OpamSysPkg.Set.t
 
 (* Return the commands to run to install given system packages.
    [env] is used to determine host specification. *)
@@ -38,7 +40,7 @@ val package_manager_name: ?env:gt_variables -> OpamSwitch.t -> OpamFile.Config.t
    repositories.
    Presently used to check for epel-release on CentOS and RHEL.
    [env] is used to determine host specification. *)
-val repo_enablers: ?env:gt_variables -> OpamFile.Config.t -> string option
+val repo_enablers: ?env:gt_variables -> OpamSwitch.t -> OpamFile.Config.t -> string option
 
 
 module Cygwin : sig

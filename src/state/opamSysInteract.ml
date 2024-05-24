@@ -409,7 +409,7 @@ let yum_cmd = lazy begin
     raise (OpamSystem.Command_not_found "yum or dnf")
 end
 
-let packages_status ?(env=OpamVariable.Map.empty) config packages =
+let packages_status ?(env=OpamVariable.Map.empty) switch config packages =
   let (+++) pkg set = OpamSysPkg.Set.add (OpamSysPkg.of_string pkg) set in
   (* Some package managers don't permit to request on available packages. In
      this case, we consider all non installed packages as [available]. *)
@@ -426,7 +426,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
         let available = packages -- installed in
         available, OpamSysPkg.Set.empty
     in
-    available, not_found
+    available, OpamSysPkg.Set.empty, not_found
   in
   let to_string_list pkgs =
     OpamSysPkg.(Set.fold (fun p acc -> to_string p :: acc) pkgs [])
@@ -907,7 +907,12 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
          be found.' But omitting them will mean that they won't be
          added to the Nix derivation.
       *)
-      packages, OpamSysPkg.Set.empty;
+    let open OpamFilename in
+    let dir = OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) switch in
+    let installedFile = create dir (basename (raw "nix_installed")) in
+    let packages_str = try read installedFile with _ -> "" in
+    let installed = OpamSysPkg.Set.of_list (List.map OpamSysPkg.of_string (String.split_on_char ' ' packages_str)) in
+    packages -- installed, packages, OpamSysPkg.Set.empty;
   | Openbsd ->
     let sys_installed =
       run_query_command "pkg_info" ["-mqP"]
@@ -1024,14 +1029,16 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) switch config sys_
   | Nix ->
     let open OpamFilename in
     let dir = OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) switch in
+    let packages_str = String.concat " " (List.rev (OpamSysPkg.Set.fold (fun p l -> OpamSysPkg.to_string p :: l) sys_packages [])) in
+    let installedFile = create dir (basename (raw "nix_installed")) in
+    write installedFile packages_str;
     let drvFile = create dir (basename (raw "env.nix")) in
-    let packages = String.concat " " (List.rev (OpamSysPkg.Set.fold (fun p l -> OpamSysPkg.to_string p :: l) sys_packages [])) in
-    let contents =
+    let drv =
 {|{ pkgs ? import <nixpkgs> {} }:
 with pkgs;
 stdenv.mkDerivation {
   name = "opam-nix-env";
-  nativeBuildInputs = with buildPackages; [ |} ^ packages ^ {| ];
+  nativeBuildInputs = with buildPackages; [ |} ^ packages_str ^ {| ];
 
   phases = [ "buildPhase" ];
 
@@ -1047,7 +1054,7 @@ echo "PATH	+=	$PATH	Nix" >> $out
   preferLocalBuild = true;
 }
 |} in
-    write drvFile contents;
+    write drvFile drv;
     let envFile = create dir (basename (raw "nix.env")) |> OpamFilename.to_string in
     [`AsUser "nix-build", [ OpamFilename.to_string drvFile; "--out-link"; envFile ] ], None
   | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
@@ -1123,10 +1130,10 @@ let update ?(env=OpamVariable.Map.empty) config =
     try sudo_run_command ~env cmd args
     with Failure msg -> failwith ("System package update " ^ msg)
 
-let repo_enablers ?(env=OpamVariable.Map.empty) config =
+let repo_enablers ?(env=OpamVariable.Map.empty) switch config =
   if family ~env () <> Centos then None else
-  let (needed, _) =
-    packages_status ~env config (OpamSysPkg.raw_set
+  let (needed, _, _) =
+    packages_status ~env switch config (OpamSysPkg.raw_set
                        (OpamStd.String.Set.singleton "epel-release"))
   in
   if OpamSysPkg.Set.is_empty needed then None
