@@ -899,7 +899,14 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages =
     in
     compute_sets sys_installed
   | Nix ->
-      (* TODO list all available packages *)
+      (* We say all requested packages are available but uninstalled.
+         We could check that these packages are available in Nixpkgs,
+         but that would involve an expensive Nixpkgs evaluation.
+         Saying no packages are installed results in a warning that
+         conf packages depend on a 'system package that can no longer
+         be found.' But omitting them will mean that they won't be
+         added to the Nix derivation.
+      *)
       packages, OpamSysPkg.Set.empty;
   | Openbsd ->
     let sys_installed =
