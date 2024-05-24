@@ -1022,7 +1022,6 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) switch config sys_
      "-Su"::"--noconfirm"::packages], None
   | Netbsd -> [`AsAdmin "pkgin", yes ["-y"] ("install" :: packages)], None
   | Nix ->
-    (* TODO where to put this? *)
     let open OpamFilename in
     let dir = OpamPath.Switch.meta OpamStateConfig.(!r.root_dir) switch in
     let drvFile = create dir (basename (raw "env.nix")) in
