@@ -1,0 +1,12 @@
+FROM nixos/nix
+RUN nix-channel --update
+RUN nix-shell -p gnum4 git rsync patch gnutar bzip2 gnumake wget ocamlPackages.ocaml ocamlPackages.ocaml-compiler-libs
+RUN test -d /opam || mkdir /opam
+ENV OPAMROOTISOK 1
+ENV OPAMROOT /opam/root
+ENV OPAMYES 1
+ENV OPAMCONFIRMLEVEL unsafe-yes
+ENV OPAMPRECISETRACKING 1
+COPY opam /usr/bin/opam
+COPY entrypoint.sh /opam/entrypoint.sh
+ENTRYPOINT ["/opam/entrypoint.sh"]

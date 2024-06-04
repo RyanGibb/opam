@@ -1,0 +1,5 @@
+name: 'depexts-nix'
+description: 'Test external dependencies handling for nix'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
