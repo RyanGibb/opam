@@ -60,6 +60,8 @@ users)
 
 ## External dependencies
 
+[NEW] Support providing external dependencies with Nix
+
 ## Format upgrade
 
 ## Sandbox
