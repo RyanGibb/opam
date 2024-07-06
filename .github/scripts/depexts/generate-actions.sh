@@ -106,7 +106,6 @@ EOF
     cat >$dir/Dockerfile << EOF
 FROM nixos/nix
 RUN nix-channel --update
-RUN nix-env -i gnum4 git rsync patch gnutar bzip2 gnumake wget ocamlPackages.ocaml ocamlPackages.ocaml-compiler-libs
 EOF
 esac
 
@@ -130,9 +129,17 @@ RUN /usr/bin/opam switch create this-opam --formula='$OCAML_INVARIANT'
 RUN /usr/bin/opam install opam-core opam-state opam-solver opam-repository opam-format opam-client --deps
 RUN /usr/bin/opam clean -as --logs
 COPY entrypoint.sh /opam/entrypoint.sh
-ENTRYPOINT ["/opam/entrypoint.sh"]
 EOF
 
+if [ "$target" != "nix" ]; then
+  cat >>$dir/Dockerfile << EOF
+ENTRYPOINT ["/opam/entrypoint.sh"]
+EOF
+else
+  cat >>$dir/Dockerfile << EOF
+ENTRYPOINT ["nix-shell", "-p", "gnum4", "git", "rsync", "patch", "gnutar", "bzip2", "gnumake", "wget", "ocamlPackages.ocaml", "ocamlPackages.ocaml-compiler-libs", "--run", "/opam/entrypoint.sh"]
+EOF
+fi
 
 ### Generate the entrypoint
 cat >$dir/entrypoint.sh << EOF
