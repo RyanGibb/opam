@@ -1005,7 +1005,7 @@ let packages_status ?(env=OpamVariable.Map.empty) config packages ~old_packages 
 
 (* Install *)
 
-let install_packages_commands_t ?(env=OpamVariable.Map.empty) switch config sys_packages ~required =
+let install_packages_commands_t ?(env=OpamVariable.Map.empty) ?nixpkgsHash switch config sys_packages ~required =
   let unsafe_yes = OpamCoreConfig.answer_is `unsafe_yes in
   let yes ?(no=[]) yes r =
     if unsafe_yes then
@@ -1106,7 +1106,12 @@ let install_packages_commands_t ?(env=OpamVariable.Map.empty) switch config sys_
       OpamSysPkg.Set.Op.(sys_packages ++ required) [])
     in
     let contents =
-{|{ pkgs ? import <nixpkgs> {} }:
+      (match nixpkgsHash with
+        | None -> {|{ pkgs ? import <nixpkgs> {} }:|}
+        | Some nixpkgsHash ->
+{|{ pkgs ? import (fetchTarball {
+  url = "https://github.com/NixOS/nixpkgs/archive/|} ^ nixpkgsHash ^ {|.tar.gz";
+  }) {} }: |}) ^ {|
 with pkgs;
 stdenv.mkDerivation {
   name = "opam-nix-env";
@@ -1132,8 +1137,8 @@ echo "PATH	+=	$PATH	Nix" >> $out
   | Openbsd -> [`AsAdmin "pkg_add", yes ~no:["-i"] ["-I"] packages], None
   | Suse -> [`AsAdmin "zypper", yes ["--non-interactive"] ("install"::packages)], None
 
-let install_packages_commands ?env switch config sys_packages ~required =
-  fst (install_packages_commands_t ?env switch config sys_packages ~required)
+let install_packages_commands ?env ?nixpkgsHash switch config sys_packages ~required =
+  fst (install_packages_commands_t ?env ?nixpkgsHash switch config sys_packages ~required)
 
 let package_manager_name ?env switch config =
   match install_packages_commands ?env switch config OpamSysPkg.Set.empty ~required:OpamSysPkg.Set.empty with
@@ -1161,11 +1166,11 @@ let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
       "failed with exit code %d at command:\n    %s"
       code (String.concat " " (cmd::args))
 
-let install ?env switch config packages ~required =
+let install ?env ?nixpkgsHash switch config packages ~required =
   if OpamSysPkg.Set.is_empty packages then
     log "Nothing to install"
   else
-    let commands, vars = install_packages_commands_t ?env switch config packages ~required in
+    let commands, vars = install_packages_commands_t ?env ?nixpkgsHash switch config packages ~required in
     let vars = OpamStd.Option.map (List.map (fun x -> `add, x)) vars in
     List.iter
       (fun (cmd, args) ->
