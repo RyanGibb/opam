@@ -128,7 +128,7 @@ ENTRYPOINT ["/opam/entrypoint.sh"]
 EOF
 else
   cat >>$dir/Dockerfile << EOF
-ENTRYPOINT ["nix-shell", "-p", "gnum4", "git", "rsync", "patch", "gnutar", "bzip2", "gnumake", "wget", "ocamlPackages.ocaml", "ocamlPackages.ocaml-compiler-libs", "--run", "/opam/entrypoint.sh"]
+ENTRYPOINT ["nix-shell", "-p", "gnum4", "git", "rsync", "patch", "gnutar", "bzip2", "gnumake", "wget", "ocamlPackages.ocaml", "ocamlPackages.ocaml-compiler-libs", "opam", "--run", "/opam/entrypoint.sh"]
 EOF
 fi
 
