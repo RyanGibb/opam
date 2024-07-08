@@ -1148,7 +1148,7 @@ let get_depexts ?(force=false) ?(recover=false) t ~new_packages ~all_packages =
   print_depext_msg (avail, nf);
   avail, required
 
-let install_sys_packages ~map_sysmap ~confirm ~sys_packages ~required env config t =
+let install_sys_packages ?nixpkgsHash ~map_sysmap ~confirm ~sys_packages ~required env config t =
   let rec entry_point t sys_packages required =
     if OpamClientConfig.(!r.fake) then
       (print_command sys_packages; t)
@@ -1196,7 +1196,7 @@ let install_sys_packages ~map_sysmap ~confirm ~sys_packages ~required env config
     if OpamSysPoll.os_distribution env = Some "cygwin" then
       OpamSysInteract.Cygwin.check_setup ~update:false;
     let commands =
-      OpamSysInteract.install_packages_commands ~env (Option.map (fun t -> t.switch) t) config sys_packages ~required
+      OpamSysInteract.install_packages_commands ~env ?nixpkgsHash (Option.map (fun t -> t.switch) t) config sys_packages ~required
       |> List.map (fun ((`AsAdmin c | `AsUser c), a) -> c::a)
     in
     OpamConsole.formatted_msg
@@ -1227,7 +1227,7 @@ let install_sys_packages ~map_sysmap ~confirm ~sys_packages ~required env config
     try
       if OpamSysPoll.os_distribution env = Some "cygwin" then
         OpamSysInteract.Cygwin.check_setup ~update:true;
-      OpamSysInteract.install ~env (Option.map (fun t -> t.switch) t) config sys_packages ~required; (* handles dry_run *)
+      OpamSysInteract.install ~env ?nixpkgsHash (Option.map (fun t -> t.switch) t) config sys_packages ~required; (* handles dry_run *)
       map_sysmap (fun _ -> OpamSysPkg.Set.empty) t
     with Failure msg ->
       OpamConsole.error "%s" msg;
@@ -1305,9 +1305,21 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t ~new_packages ~all_p
   let sys_packages, required =
     get_depexts ~force:force_depext ~recover:force_depext t ~new_packages ~all_packages
   in
+  let nixpkgsHash =
+    match
+      OpamPackage.package_of_name_opt all_packages (OpamPackage.Name.of_string "nixpkgs")
+    with
+    | None -> None
+    | Some nixpkgs ->
+        let opamFile = OpamPackage.Map.find nixpkgs t.repos_package_index in
+        match OpamStd.String.Map.find_opt "x-nixpkgs-hash" opamFile.extensions with
+        | Some {pelem = String hash;_} ->
+          Some hash
+        | _ -> None
+  in
   let env = t.switch_global.global_variables in
   let config = t.switch_global.config in
-  Option.get @@ install_sys_packages ~map_sysmap ~confirm env config ~sys_packages ~required (Some t)
+  Option.get @@ install_sys_packages ?nixpkgsHash ~map_sysmap ~confirm env config ~sys_packages ~required (Some t)
 
 let install_sys_packages ~confirm =
   install_sys_packages ~map_sysmap:(fun _ t -> t) ~confirm
