@@ -103,6 +103,7 @@ EOF
     cat >$dir/Dockerfile << EOF
 FROM nixos/nix
 RUN nix-channel --update
+RUN nix-shell -p gnum4 git rsync patch gnutar bzip2 gnumake wget ocamlPackages.ocaml ocamlPackages.ocaml-compiler-libs unzip
 EOF
 esac
 
@@ -128,7 +129,7 @@ ENTRYPOINT ["/opam/entrypoint.sh"]
 EOF
 else
   cat >>$dir/Dockerfile << EOF
-ENTRYPOINT ["nix-shell", "-p", "gnum4", "git", "rsync", "patch", "gnutar", "bzip2", "gnumake", "wget", "ocamlPackages.ocaml", "ocamlPackages.ocaml-compiler-libs", "opam", "--run", "/opam/entrypoint.sh"]
+ENTRYPOINT ["nix-shell", "-p", "gnum4", "git", "rsync", "patch", "gnutar", "bzip2", "gnumake", "wget", "ocamlPackages.ocaml", "ocamlPackages.ocaml-compiler-libs", "unzip", "--run", "/opam/entrypoint.sh"]
 EOF
 fi
 
@@ -137,6 +138,18 @@ cat >$dir/entrypoint.sh << EOF
 #!/bin/sh
 set -eux
 
+EOF
+
+if [ "$target" != "nix" ]; then
+  cat >>$dir/entrypoint.sh << EOF
+export PATH="$PATH:/usr/bin/"
+chmod +x /usr/bin/opam
+
+EOF
+fi
+
+### Generate the entrypoint
+cat >$dir/entrypoint.sh << EOF
 git config --global --add safe.directory /github/workspace
 # For systems that don't have an up to date compiler, to avoid ocaml-secondary
 echo 'default-invariant: [ $OCAML_INVARIANT ]' > /opam/opamrc
