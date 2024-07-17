@@ -170,13 +170,6 @@ cd /github/workspace
 #git clone https://github.com/ocaml/opam --single-branch --branch 2.2 --depth 1 local-opam
 #cd local-opam
 
-/usr/bin/opam install . --deps
-eval \$(opam env)
-./configure
-make
-./opam config report
-./opam switch create confs --empty
-
 EOF
 
 if [ $target == "nix" ]; then
@@ -186,6 +179,18 @@ echo 'global-variables: [("os-distribution", "nixos")]' >> ~/.opam/config
 
 EOF
 fi
+
+cat >>$dir/entrypoint.sh << EOF
+/usr/bin/opam install . --deps
+eval \$(opam env)
+./configure
+make
+./opam config report
+./opam switch create confs --empty
+
+EOF
+
+
 
 # Test depexts
 
