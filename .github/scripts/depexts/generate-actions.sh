@@ -181,8 +181,7 @@ EOF
 
 if [ $target == "nix" ]; then
 	cat >>$dir/entrypoint.sh << EOF
-echo 'global-variables: [[os-distribution ["nixos"] "nixos"]]' >> /opam/root/config
-./opam var
+./opam var --global os-family=nixos
 
 EOF
 fi
