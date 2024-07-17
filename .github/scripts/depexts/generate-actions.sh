@@ -174,8 +174,6 @@ cd /github/workspace
 eval \$(/usr/bin/opam env)
 ./configure
 make
-./opam config report
-./opam switch create confs --empty
 
 EOF
 
@@ -185,6 +183,12 @@ if [ $target == "nix" ]; then
 
 EOF
 fi
+
+
+cat >>$dir/entrypoint.sh << EOF
+./opam config report
+./opam switch create confs --empty
+EOF
 
 # Test depexts
 
