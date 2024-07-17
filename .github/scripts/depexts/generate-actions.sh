@@ -165,12 +165,13 @@ EOF
 
 if [ $target == "nix" ]; then
 	cat >>$dir/entrypoint.sh << EOF
-nix-shell -p binutils
+nix-shell -p binutils --run env > /nix.env
+source /nix.env
 
 EOF
 fi
 
-cat >$dir/entrypoint.sh << EOF
+cat >>$dir/entrypoint.sh << EOF
 /usr/bin/opam install . --deps
 eval \$(opam env)
 ./configure
