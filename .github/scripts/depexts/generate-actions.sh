@@ -106,7 +106,7 @@ EOF
     cat >$dir/Dockerfile << EOF
 FROM nixos/nix
 RUN nix-channel --update
-RUN nix-shell -p gnum4 git rsync patch gnutar bzip2 gnumake wget ocamlPackages.ocaml ocamlPackages.ocaml-compiler-libs unzip
+RUN nix-shell -p gnum4 git rsync patch gnutar bzip2 gnumake wget ocamlPackages.ocaml ocamlPackages.ocaml-compiler-libs unzip gcc diffutils patch getconf
 EOF
 esac
 
@@ -138,7 +138,7 @@ ENTRYPOINT ["/opam/entrypoint.sh"]
 EOF
 else
   cat >>$dir/Dockerfile << EOF
-ENTRYPOINT ["nix-shell", "-p", "gnum4", "git", "rsync", "patch", "gnutar", "bzip2", "gnumake", "wget", "ocamlPackages.ocaml", "ocamlPackages.ocaml-compiler-libs", "unzip", "--run", "/opam/entrypoint.sh"]
+ENTRYPOINT ["nix-shell", "-p", "gnum4", "git", "rsync", "patch", "gnutar", "bzip2", "gnumake", "wget", "ocamlPackages.ocaml", "ocamlPackages.ocaml-compiler-libs", "unzip", "gcc", "diffutils", "patch", "getconf", "--run", "/opam/entrypoint.sh"]
 EOF
 fi
 
