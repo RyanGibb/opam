@@ -124,6 +124,15 @@ ENV OPAMCONFIRMLEVEL=unsafe-yes
 ENV OPAMPRECISETRACKING=1
 COPY opam /usr/bin/opam
 RUN echo 'default-invariant: [ $OCAML_INVARIANT ]' > /opam/opamrc
+EOF
+
+if [ $target == "nix" ]; then
+	cat >>$dir/Dockerfile << EOF
+RUN echo 'global-variables: [[os-distribution ["nixos"] "nixos"]]' > /opam/opamrc
+EOF
+fi
+
+cat >>$dir/Dockerfile << EOF
 RUN /usr/bin/opam init --no-setup --disable-sandboxing --bare --config /opam/opamrc git+$OPAM_REPO#$OPAM_REPO_SHA
 RUN echo 'archive-mirrors: "https://opam.ocaml.org/cache"' >> \$OPAMROOT/config
 RUN /usr/bin/opam switch create this-opam --formula='$OCAML_INVARIANT'
@@ -170,17 +179,6 @@ cd /github/workspace
 #git clone https://github.com/ocaml/opam --single-branch --branch 2.2 --depth 1 local-opam
 #cd local-opam
 
-EOF
-
-if [ $target == "nix" ]; then
-	cat >>$dir/entrypoint.sh << EOF
-mkdir ~/.opam
-echo 'global-variables: [("os-distribution", "nixos")]' >> ~/.opam/config
-
-EOF
-fi
-
-cat >>$dir/entrypoint.sh << EOF
 /usr/bin/opam install . --deps
 eval \$(opam env)
 ./configure
