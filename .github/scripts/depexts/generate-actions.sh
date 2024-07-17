@@ -161,6 +161,16 @@ cd /github/workspace
 #git clone https://github.com/ocaml/opam --single-branch --branch 2.2 --depth 1 local-opam
 #cd local-opam
 
+EOF
+
+if [ $target == "nix" ]; then
+	cat >>$dir/entrypoint.sh << EOF
+nix-shell -p binutils
+
+EOF
+fi
+
+cat >$dir/entrypoint.sh << EOF
 /usr/bin/opam install . --deps
 eval \$(opam env)
 ./configure
