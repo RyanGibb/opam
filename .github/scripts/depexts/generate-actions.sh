@@ -144,8 +144,17 @@ fi
 cat >>$dir/Dockerfile << EOF
 RUN /usr/bin/opam clean -as --logs
 COPY entrypoint.sh /opam/entrypoint.sh
+EOF
+
+if [ $target == "nix" ]; then
+	cat >>$dir/Dockerfile << EOF
+ENTRYPOINT ["nix-shell", "-p", "binutils", "--run", "/opam/entrypoint.sh"]
+EOF
+else
+	cat >>$dir/Dockerfile << EOF
 ENTRYPOINT ["/opam/entrypoint.sh"]
 EOF
+fi
 
 ### Generate the entrypoint
 cat >$dir/entrypoint.sh << EOF
@@ -161,17 +170,6 @@ cd /github/workspace
 #git clone https://github.com/ocaml/opam --single-branch --branch 2.2 --depth 1 local-opam
 #cd local-opam
 
-EOF
-
-if [ $target == "nix" ]; then
-	cat >>$dir/entrypoint.sh << EOF
-nix-shell -p binutils --run env > /nix.env
-source /nix.env
-
-EOF
-fi
-
-cat >>$dir/entrypoint.sh << EOF
 /usr/bin/opam install . --deps
 eval \$(opam env)
 ./configure
