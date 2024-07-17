@@ -172,7 +172,8 @@ EOF
 
 if [ $target == "nix" ]; then
 	cat >>$dir/entrypoint.sh << EOF
-opam option --global os-distribution=nix
+mkdir ~/.opam
+echo 'global-variables: [("os-distribution", "nixos")]' >> ~/.opam/config
 
 EOF
 fi
