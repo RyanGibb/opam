@@ -167,7 +167,15 @@ eval \$(opam env)
 make
 ./opam config report
 ./opam switch create confs --empty
+
 EOF
+
+if [ $target == "nix" ]; then
+	cat >>$dir/entrypoint.sh << EOF
+opam option --global os-distribution=nix
+
+EOF
+fi
 
 # Test depexts
 
