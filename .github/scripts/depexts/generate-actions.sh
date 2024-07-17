@@ -106,7 +106,7 @@ EOF
     cat >$dir/Dockerfile << EOF
 FROM nixos/nix
 RUN nix-channel --update
-RUN nix-shell -p gnum4 git rsync patch gnutar bzip2 gnumake wget ocamlPackages.ocaml ocamlPackages.ocaml-compiler-libs unzip gcc diffutils patch getconf
+RUN nix-env -i gnum4 git rsync patch bzip2 gnumake wget ocaml ocaml5.1.1-ocaml-compiler-libs unzip gcc diffutils patch getconf-glibc gnused
 EOF
 esac
 
@@ -127,38 +127,31 @@ RUN echo 'default-invariant: [ $OCAML_INVARIANT ]' > /opam/opamrc
 RUN /usr/bin/opam init --no-setup --disable-sandboxing --bare --config /opam/opamrc git+$OPAM_REPO#$OPAM_REPO_SHA
 RUN echo 'archive-mirrors: "https://opam.ocaml.org/cache"' >> \$OPAMROOT/config
 RUN /usr/bin/opam switch create this-opam --formula='$OCAML_INVARIANT'
-RUN /usr/bin/opam install opam-core opam-state opam-solver opam-repository opam-format opam-client --deps
-RUN /usr/bin/opam clean -as --logs
-COPY entrypoint.sh /opam/entrypoint.sh
 EOF
 
-if [ "$target" != "nix" ]; then
-  cat >>$dir/Dockerfile << EOF
-ENTRYPOINT ["/opam/entrypoint.sh"]
+# we can't `nix-env -i binutils`
+# https://github.com/NixOS/nix/issues/10587
+if [ $target == "nix" ]; then
+	cat >>$dir/Dockerfile << EOF
+RUN nix-shell -p binutils --run "/usr/bin/opam install opam-core opam-state opam-solver opam-repository opam-format opam-client --deps"
 EOF
 else
-  cat >>$dir/Dockerfile << EOF
-ENTRYPOINT ["nix-shell", "-p", "gnum4", "git", "rsync", "patch", "gnutar", "bzip2", "gnumake", "wget", "ocamlPackages.ocaml", "ocamlPackages.ocaml-compiler-libs", "unzip", "gcc", "diffutils", "patch", "getconf", "--run", "/opam/entrypoint.sh"]
+	cat >>$dir/Dockerfile << EOF
+RUN /usr/bin/opam install opam-core opam-state opam-solver opam-repository opam-format opam-client --deps
 EOF
 fi
+
+cat >>$dir/Dockerfile << EOF
+RUN /usr/bin/opam clean -as --logs
+COPY entrypoint.sh /opam/entrypoint.sh
+ENTRYPOINT ["/opam/entrypoint.sh"]
+EOF
 
 ### Generate the entrypoint
 cat >$dir/entrypoint.sh << EOF
 #!/bin/sh
 set -eux
 
-EOF
-
-if [ "$target" != "nix" ]; then
-  cat >>$dir/entrypoint.sh << EOF
-export PATH="$PATH:/usr/bin/"
-chmod +x /usr/bin/opam
-
-EOF
-fi
-
-### Generate the entrypoint
-cat >$dir/entrypoint.sh << EOF
 git config --global --add safe.directory /github/workspace
 
 # Workdir is /github/workpaces
