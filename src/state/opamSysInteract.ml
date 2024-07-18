@@ -1175,7 +1175,7 @@ let sudo_run_command ?(env=OpamVariable.Map.empty) ?vars cmd args =
       code (String.concat " " (cmd::args))
 
 let install ?env switch config packages ~required =
-  if OpamSysPkg.Set.is_empty packages then
+  if OpamSysPkg.Set.is_empty packages && OpamSysPkg.Set.is_empty required then
     log "Nothing to install"
   else
     let commands, vars = install_packages_commands_t ?env switch config packages ~required in
