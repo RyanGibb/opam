@@ -1271,7 +1271,7 @@ let install_sys_packages ~map_sysmap ~confirm ~sys_packages ~required env config
     give_up_msg ();
     OpamStd.Sys.exit_because `Aborted
   in
-  if OpamSysPkg.Set.is_empty sys_packages ||
+  if (OpamSysPkg.Set.is_empty sys_packages && OpamSysPkg.Set.is_empty required) ||
      OpamClientConfig.(!r.show) ||
      OpamClientConfig.(!r.assume_depexts) then
     t
