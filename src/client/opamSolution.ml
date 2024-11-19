@@ -1160,7 +1160,7 @@ let install_sys_packages ~map_sysmap ~confirm ~sys_packages ~required env config
     let answer =
       let pkgman =
         OpamConsole.colorise `yellow
-          (OpamSysInteract.package_manager_name ~env config)
+          (OpamSysInteract.package_manager_name ~env (Option.map (fun t -> t.switch) t) config)
       in
       OpamConsole.menu ~unsafe_yes:`Yes ~default:`Yes ~no:`Quit
         "opam believes some required external dependencies are missing. opam \
@@ -1284,6 +1284,7 @@ let install_sys_packages ~map_sysmap ~confirm ~sys_packages ~required env config
 
 let install_depexts ?(force_depext=false) ?(confirm=true) t ~new_packages ~all_packages =
   let map_sysmap f t =
+    let t = Option.get t in
     let sys_packages =
       OpamPackage.Set.fold (fun nv sys_map ->
           match OpamPackage.Map.find_opt nv sys_map with
@@ -1306,11 +1307,10 @@ let install_depexts ?(force_depext=false) ?(confirm=true) t ~new_packages ~all_p
   in
   let env = t.switch_global.global_variables in
   let config = t.switch_global.config in
-  install_sys_packages ~map_sysmap ~confirm env config sys_packages t
   Option.get @@ install_sys_packages ~map_sysmap ~confirm env config ~sys_packages ~required (Some t)
 
 let install_sys_packages ~confirm =
-  install_sys_packages ~map_sysmap:(fun _ () -> ()) ~confirm
+  install_sys_packages ~map_sysmap:(fun _ _ -> None) ~confirm
 
 (* Apply a solution *)
 let apply ?ask t ~requested ?print_requested ?add_roots

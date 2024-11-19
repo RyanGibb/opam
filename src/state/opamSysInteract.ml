@@ -126,6 +126,7 @@ type families =
   | Macports
   | Msys2
   | Netbsd
+  | Nix
   | Openbsd
   | Suse
 
@@ -194,6 +195,7 @@ let family ~env () =
       failwith
         "External dependency handling for macOS requires either \
          MacPorts or Homebrew - neither could be found"
+    | "nixos" -> Nix
     | "suse" | "opensuse" -> Suse
     | "windows" ->
       (match OpamSysPoll.os_distribution env with
@@ -1189,6 +1191,7 @@ let update ?(env=OpamVariable.Map.empty) config =
     | Macports -> Some (`AsAdmin "port", ["sync"])
     | Msys2 -> Some (`AsUser (Commands.msys2 config), ["-Sy"])
     | Netbsd -> None
+    | Nix -> None
     | Openbsd -> None
     | Suse -> Some (`AsAdmin "zypper", ["--non-interactive"; "refresh"])
   in
